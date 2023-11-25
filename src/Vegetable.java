@@ -1,10 +1,21 @@
+import java.util.ArrayList;
+import java.util.Comparator;
+import java.util.List;
+import javax.swing.JOptionPane;
+////////////////////////////////////////////////////////////////////////////
 class Vegetable implements Comparable<Vegetable> {
-    private int vID;
-    private String vNAME;
-    private String vCOLOR;
-    private String vZONE;
-    private String vEAT;
+    public int vID;
+    public String vNAME;
+    public String vCOLOR;
+    public String vZONE;
+    public String vEAT;
 
+
+
+
+////////////////////////////////////////////////////////////////////////////
+
+    /////////////////////////////////////////////////////////////////////////////////
     public Vegetable(int id, String zone, String color, String eat, String name) {
         vID = id;
         vNAME = name;
@@ -12,7 +23,11 @@ class Vegetable implements Comparable<Vegetable> {
         vZONE = zone;
         vEAT = eat;
     }
+///////////////////////////////////////////////////////////////////////////////////////
 
+
+
+    //////////////////////////////////////////////////////////////////////////////////
     public String getName() {
         return vNAME;
     }
@@ -21,7 +36,9 @@ class Vegetable implements Comparable<Vegetable> {
     public int compareTo(Vegetable other) {
         return this.vNAME.compareTo(other.vNAME);
     }
+    ////////////////////////////////////////////////////////////////////////////////////
 
+    ///////////////////////////////////////////////////////////////////////////////////////
     @Override
     public String toString() {
         return "Vegetable{" +
@@ -32,65 +49,115 @@ class Vegetable implements Comparable<Vegetable> {
                 ", vEAT='" + vEAT + '\'' +
                 '}';
     }
+    ///////////////////////////////////////////////////////////////////////////////////////
+}
+
+class MyNode {
+    String node;
+    List<Vegetable> vegetables;
+    MyNode left, right;
+
+    public MyNode(String node, Vegetable vegetable) {
+        this.node = node;
+        this.vegetables = new ArrayList<>();
+        this.vegetables.add(vegetable);
+        this.left = this.right = null;
+
+    }
+
+
 }
 
 class BinarySearchTree {
-    private TreeNode root;
 
-    private static class TreeNode {
-        Vegetable vegetable;
-        TreeNode left, right;
+    private MyNode root;
 
-        public TreeNode(Vegetable vegetable) {
-            this.vegetable = vegetable;
-            this.left = this.right = null;
-        }
+    public MyNode getRoot() {
+        return root;
     }
+
 
     public BinarySearchTree() {
         this.root = null;
     }
 
+
+
     public void insert(Vegetable vegetable) {
         root = insertRec(root, vegetable);
     }
 
-    private TreeNode insertRec(TreeNode root, Vegetable vegetable) {
+    private MyNode insertRec(MyNode root, Vegetable vegetable) {
         if (root == null) {
-            return new TreeNode(vegetable);
+            return new MyNode(vegetable.vZONE, vegetable);
         }
 
-        if (vegetable.compareTo(root.vegetable) < 0) {
+        if (vegetable.vZONE.compareTo(root.node) < 0) {
             root.left = insertRec(root.left, vegetable);
-        } else if (vegetable.compareTo(root.vegetable) > 0) {
+        } else if (vegetable.vZONE.compareTo(root.node) > 0) {
             root.right = insertRec(root.right, vegetable);
+        } else {
+            // Same zone, add to the list
+            root.vegetables.add(vegetable);
+            root.vegetables.sort(Comparator.comparing(Vegetable::getName));
         }
 
         return root;
     }
 
-    public void inOrder() {
-        inOrderRec(root);
+    public void inOrder(String targetZone, String targetColor, String targetEat) {
+        inOrderRec(root, targetZone, targetColor, targetEat);
     }
 
-    private void inOrderRec(TreeNode root) {
+    private void inOrderRec(MyNode root, String targetZone, String targetColor, String targetEat) {
         if (root != null) {
-            inOrderRec(root.left);
-            System.out.println(root.vegetable);
-            inOrderRec(root.right);
+            inOrderRec(root.left, targetZone, targetColor, targetEat);
+            if (root.node.equals(targetZone)) {
+                System.out.println("Zone: " + root.node);
+                for (Vegetable vegetable : root.vegetables) {
+                    if ((targetColor == null || vegetable.vCOLOR.equals(targetColor)) &&
+                            (targetEat == null || vegetable.vEAT.equals(targetEat))) {
+                        System.out.println("   " + vegetable);
+                    }
+                }
+            }
+            inOrderRec(root.right, targetZone, targetColor, targetEat);
         }
     }
-}
 
-public class Main {
-    public static void main(String[] args) {
-        BinarySearchTree bst = new BinarySearchTree();
-        bst.insert(new Vegetable(1, "ZoneA", "Green", "Yes", "Zucchini"));
-        bst.insert(new Vegetable(2, "ZoneB", "Red", "No", "Tomato"));
-        bst.insert(new Vegetable(3, "ZoneC", "Orange", "Yes", "Carrot"));
-        bst.insert(new Vegetable(4, "ZoneD", "Yellow", "Yes", "Banana"));
 
-        System.out.println("In-order traversal:");
-        bst.inOrder();
+
+    private static List<Vegetable> searchVegetableByName(BinarySearchTree tree, String name) {
+        List<Vegetable> foundVegetables = new ArrayList<>();
+        searchVegetableByNameRec(tree.getRoot(), name, foundVegetables);
+        return foundVegetables;
     }
+
+    private static void searchVegetableByNameRec(MyNode root, String name, List<Vegetable> foundVegetables) {
+        if (root != null) {
+            for (Vegetable vegetable : root.vegetables) {
+                if (vegetable.getName().equalsIgnoreCase(name)) {
+                    foundVegetables.add(vegetable);
+                }
+            }
+            searchVegetableByNameRec(root.left, name, foundVegetables);
+            searchVegetableByNameRec(root.right, name, foundVegetables);
+        }
+    }
+    private static List<Vegetable> getAllVegetablesWithSameData(BinarySearchTree tree, String name) {
+        List<Vegetable> allVegetables = new ArrayList<>();
+        getAllVegetablesWithSameDataRec(tree.getRoot(), name, allVegetables);
+        return allVegetables;
+    }
+
+    private static void getAllVegetablesWithSameDataRec(MyNode root, String name, List<Vegetable> allVegetables) {
+        if (root != null) {
+            for (Vegetable vegetable : root.vegetables) {
+                allVegetables.add(vegetable);
+            }
+            getAllVegetablesWithSameDataRec(root.left, name, allVegetables);
+            getAllVegetablesWithSameDataRec(root.right, name, allVegetables);
+        }
+    }
+
 }
